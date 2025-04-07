@@ -1,0 +1,1 @@
+echo "This script needs to be written based on https://flask-migrate.readthedocs.io/en/latest/"

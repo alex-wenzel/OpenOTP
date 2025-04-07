@@ -1,0 +1,1 @@
+psql -d mts_gtfs -c "SELECT n_recs, pg_size_pretty(table_size), cast(table_size AS decimal)/cast(n_recs	AS decimal) AS avg_bytes_per_row FROM (SELECT COUNT(*) as n_recs, pg_relation_size('live_record') as table_size from live_record);"
