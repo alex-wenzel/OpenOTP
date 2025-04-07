@@ -1,65 +1,36 @@
-"""
-Generally applicable data wrangling + conversion functions.
-"""
+from datetime import date
+import sys
+from sqlalchemy.exc import SQLAlchemyError
+from typing import Any, Callable, List, Optional, TypeVar 
 
+def hprint(msg: Any) -> None:
+	"""
+	Printing with stdout flush for Heroku logging.
+	"""
+	print(msg)
+	sys.stdout.flush()
 
-from datetime import datetime
-import pytz
-from typing import Any, Union
+T = TypeVar("T")
 
+def none_if_sa_error(func: Callable[..., T]) -> Callable[..., Optional[T]]:
+	def inner(*args, **kwargs) -> Optional[T]:
+		try:
+			return func(*args, **kwargs)
+		except SQLAlchemyError:
+			return None
+		
+	return inner
 
-def ts2dt(
-	ts: Union[float, int]
-) -> datetime:
+def empty_list_if_sa_error(func: Callable[...,List[T]]) -> Callable[..., List[T]]:
+	def inner(*args, **kwargs) -> List[T]:
+		try:
+			return func(*args, **kwargs)
+		except SQLAlchemyError:
+			return []
 	
-	"""
-	Converts a unix timestamp to a datetime object. Timestamps are assumed
-	to be standard Unix timestamps (i.e., GMT). This codebase is currently
-	hardcoded to operate explicitly in California (pytz "America/Los_Angeles").
+	return inner
 
-	Parameters
-	----------
-	ts : float, int
-		The timestamp input.
-
-	Returns
-	-------
-	datetime
-		The datetime object representing `ts`, is timezone-aware 
-		for "America/Los_Angeles"
-	"""
-	return datetime.fromtimestamp(
-		ts, 
-		tz = pytz.timezone("America/Los_Angeles")
-	)
-
-
-def enforce_not_None(
-	x: Any
-) -> Any:
-	
-	"""
-	Returns the value provided if it isn't None, otherwise raises a ValueError. 
-	Purpose of this function is to reduce long if/else blocks in data representation
-	class initializations. 
-
-	Parameters
-	----------
-	x : any
-		The object to check 
-
-	Returns
-	-------
-	type(x)
-		The same object x, as long as it isn't None
-	"""
-	if x is None:
-		raise ValueError(f"Object {x} cannot be None in this context.")
-	return x
-
-
-
-
-
-
-
+def date_to_int(
+	query_date: date
+) -> int:
+	return int(query_date.strftime("%Y%m%d"))
